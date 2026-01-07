@@ -1,27 +1,36 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function NewPartForm({
-  storyId,
-  onCancel,
-  onSaved,
-}: {
+type NewPartFormProps = {
   storyId: string;
+  type: "text" | "image";
   onCancel: () => void;
   onSaved: () => void;
-}) {
+};
+
+export default function NewPartForm({
+  storyId,
+  type,
+  onCancel,
+  onSaved,
+}: NewPartFormProps) {
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function savePart() {
-    if (!text && !file) {
-      alert("Informe um texto ou uma imagem");
+    if (type === "text" && !text.trim()) {
+      alert("Informe o texto");
+      return;
+    }
+
+    if (type === "image" && !file) {
+      alert("Selecione uma imagem");
       return;
     }
 
     setSaving(true);
-    let imageUrl = null;
+    let imageUrl: string | null = null;
 
     if (file) {
       const path = `${storyId}/${Date.now()}-${file.name}`;
@@ -45,7 +54,7 @@ export default function NewPartForm({
 
     const { error } = await supabase.from("story_parts").insert({
       story_id: storyId,
-      content: text || null,
+      content: type === "text" ? text.trim() : null,
       image_url: imageUrl,
       part_order: Date.now(),
     });
@@ -62,18 +71,22 @@ export default function NewPartForm({
 
   return (
     <div className="p-4 border rounded bg-white space-y-4">
-      <textarea
-        placeholder="Texto da parte (opcional)"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className="w-full p-3 border rounded"
-      />
+      {type === "text" && (
+        <textarea
+          placeholder="Texto da parte"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="w-full p-3 border rounded"
+        />
+      )}
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-      />
+      {type === "image" && (
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+      )}
 
       <div className="flex gap-3">
         <button

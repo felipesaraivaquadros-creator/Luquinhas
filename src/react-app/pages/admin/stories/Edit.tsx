@@ -2,17 +2,16 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import PartsList from "./parts/PartsList";
-import NewPartForm from "./parts/NewPartForm";
+import AddPartButtons from "./parts/AddPartButtons";
 
 export default function AdminStoryEdit() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(false);
-  const [creatingPart, setCreatingPart] = useState(false);
 
   useEffect(() => {
-    fetchStory();
+    if (id) fetchStory();
   }, [id]);
 
   async function fetchStory() {
@@ -43,26 +42,10 @@ export default function AdminStoryEdit() {
       />
 
       {/* Ações */}
-      {!creatingPart && (
-        <button
-          onClick={() => setCreatingPart(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          ➕ Criar Parte
-        </button>
-      )}
-
-      {/* Formulário */}
-      {creatingPart && (
-        <NewPartForm
-          storyId={id!}
-          onCancel={() => setCreatingPart(false)}
-          onSaved={() => {
-            setCreatingPart(false);
-            setReload(r => !r);
-          }}
-        />
-      )}
+      <AddPartButtons
+        storyId={id!}
+        onSaved={() => setReload((r) => !r)}
+      />
 
       {/* Lista */}
       <section>

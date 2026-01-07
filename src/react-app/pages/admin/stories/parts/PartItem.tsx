@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Loader2, Save } from "lucide-react";
 
 interface PartItemProps {
@@ -26,20 +23,15 @@ export default function PartItem({ storyId, onSaved }: PartItemProps) {
 
       let imageUrl: string | null = null;
 
-      /* 1️⃣ Upload da imagem (se existir) */
+      // Upload da imagem
       if (file) {
         const filePath = `${storyId}/${Date.now()}-${file.name}`;
 
         const { error: uploadError } = await supabase.storage
           .from("stories")
-          .upload(filePath, file, {
-            upsert: false,
-          });
+          .upload(filePath, file);
 
-        if (uploadError) {
-          console.error("Erro upload:", uploadError);
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
         const { data } = supabase.storage
           .from("stories")
@@ -48,49 +40,24 @@ export default function PartItem({ storyId, onSaved }: PartItemProps) {
         imageUrl = data.publicUrl;
       }
 
-      /* 2️⃣ Próximo part_order (blindado) */
-      const { data: orderData, error: orderError } = await supabase
-        .rpc("get_next_part_order", {
-          p_story_id: storyId,
-        });
+      // Insert no banco
+      const { error } = await supabase.from("story_parts").insert({
+        story_id: storyId,
+        content: content.trim() || null,
+        image_url: imageUrl,
+        part_order: Date.now(),
+      });
 
-      if (orderError) {
-        console.error("Erro RPC:", orderError);
-        throw orderError;
-      }
+      if (error) throw error;
 
-      const partOrder =
-        typeof orderData === "number" && orderData > 0
-          ? orderData
-          : 1;
-
-      /* 3️⃣ Insert da parte */
-      const { error: insertError } = await supabase
-        .from("story_parts")
-        .insert({
-          story_id: storyId,
-          part_order: partOrder,
-          text: content.trim() !== "" ? content.trim() : "", // NUNCA null
-          image_url: imageUrl,
-        });
-
-      if (insertError) {
-        console.error("Erro insert:", insertError);
-        throw insertError;
-      }
-
-      /* 4️⃣ Sucesso */
-      alert("Parte salva com sucesso");
+      alert("Parte salva com sucesso ✅");
       setContent("");
       setFile(null);
       onSaved();
 
     } catch (err: any) {
-      console.error("Erro COMPLETO ao salvar parte:", err);
-      alert(
-        "Erro ao salvar parte:\n" +
-          (err?.message || JSON.stringify(err, null, 2))
-      );
+      console.error(err);
+      alert("Erro ao salvar parte:\n" + (err?.message || ""));
     } finally {
       setSaving(false);
     }
@@ -98,22 +65,31 @@ export default function PartItem({ storyId, onSaved }: PartItemProps) {
 
   return (
     <div className="space-y-4 rounded-xl border bg-white p-4 shadow-sm">
-      <Textarea
+      {/* Texto */}
+      <textarea
         placeholder="Escreva o conteúdo da parte..."
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+          setContent(e.target.value)
+        }
+        className="w-full min-h-[120px] rounded border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
-      <Input
+      {/* Upload de imagem */}
+      <input
         type="file"
         accept="image/*"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setFile(e.target.files?.[0] || null)
+        }
+        className="block w-full text-sm"
       />
 
-      <Button
+      {/* Botão salvar */}
+      <button
         onClick={savePart}
         disabled={saving}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
       >
         {saving ? (
           <>
@@ -126,7 +102,7 @@ export default function PartItem({ storyId, onSaved }: PartItemProps) {
             Salvar Parte
           </>
         )}
-      </Button>
+      </button>
     </div>
   );
 }

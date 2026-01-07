@@ -40,7 +40,7 @@ export default function Mascot() {
       </div>
 
       {/* Estilos customizados */}
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-6px); }
