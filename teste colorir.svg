@@ -1,0 +1,30 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1080 1080"
+>
+  <!-- ÁREAS PARA PINTAR -->
+  <g id="fills">
+    <path
+      id="area-1"
+      fill="#ffffff"
+      d="M356.5 223.5 H825.5 V744.5 H356.5 Z"
+    />
+
+    <path
+      id="area-2"
+      fill="#ffffff"
+      d="M380 260 H802 V710 H380 Z"
+    />
+  </g>
+
+  <!-- CONTORNO (NÃO CLICÁVEL) -->
+  <g id="outline" pointer-events="none">
+    <path
+      d="M832.5,751.5h-483v-535h483V751.5z M356.5,744.5h469v-521h-469V744.5z"
+      fill="none"
+      stroke="#000000"
+      stroke-width="6"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>

@@ -1,0 +1,63 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 400 400"
+  width="400"
+  height="400"
+>
+  <!-- CONTORNO GERAL -->
+  <g stroke="#000" stroke-width="3" fill="none">
+
+    <!-- CORPO -->
+    <path
+      id="body"
+      d="M200 60
+         C180 120, 170 180, 200 300
+         C230 180, 220 120, 200 60 Z"
+      fill="#ffffff"
+    />
+
+    <!-- CABEÇA -->
+    <circle id="head" cx="200" cy="50" r="25" fill="#ffffff" />
+
+    <!-- OLHOS -->
+    <circle id="eye-left" cx="190" cy="45" r="5" fill="#ffffff" />
+    <circle id="eye-right" cx="210" cy="45" r="5" fill="#ffffff" />
+
+    <!-- ASA ESQUERDA -->
+    <path
+      id="wing-left"
+      d="M200 110
+         C110 70, 80 120, 140 170
+         C170 190, 190 160, 200 140 Z"
+      fill="#ffffff"
+    />
+
+    <!-- ASA DIREITA -->
+    <path
+      id="wing-right"
+      d="M200 110
+         C290 70, 320 120, 260 170
+         C230 190, 210 160, 200 140 Z"
+      fill="#ffffff"
+    />
+
+    <!-- PERNAS -->
+    <path id="leg-1" d="M180 160 L120 220" fill="none" />
+    <path id="leg-2" d="M190 170 L130 260" fill="none" />
+    <path id="leg-3" d="M200 180 L150 300" fill="none" />
+
+    <path id="leg-4" d="M220 160 L280 220" fill="none" />
+    <path id="leg-5" d="M210 170 L270 260" fill="none" />
+    <path id="leg-6" d="M200 180 L250 300" fill="none" />
+  </g>
+
+  <!-- ÁREAS PINTÁVEIS -->
+  <g id="fill">
+    <use href="#body" />
+    <use href="#head" />
+    <use href="#eye-left" />
+    <use href="#eye-right" />
+    <use href="#wing-left" />
+    <use href="#wing-right" />
+  </g>
+</svg>
