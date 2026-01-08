@@ -32,7 +32,7 @@ export default function PartsList({
     <div className="space-y-4">
       {parts.map((part) => (
         <div key={part.id} className="p-4 border rounded bg-gray-50">
-          {part.content && <p>{part.content}</p>}
+          {part.text && <p>{part.text}</p>}
           {part.image_url && (
             <img
               src={part.image_url}

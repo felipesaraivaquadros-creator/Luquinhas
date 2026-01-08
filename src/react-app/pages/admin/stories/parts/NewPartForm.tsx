@@ -29,43 +29,50 @@ export default function NewPartForm({
       return;
     }
 
-    setSaving(true);
-    let imageUrl: string | null = null;
+    try {
+      setSaving(true);
 
-    if (file) {
-      const path = `${storyId}/${Date.now()}-${file.name}`;
+      let imageUrl: string | null = null;
 
-      const { error: uploadError } = await supabase.storage
-        .from("stories")
-        .upload(path, file);
+      // 🔼 Upload imagem
+      if (file) {
+        const path = `${storyId}/${Date.now()}-${file.name}`;
 
-      if (uploadError) {
-        alert("Erro ao enviar imagem");
-        setSaving(false);
-        return;
+        const { error: uploadError } = await supabase.storage
+          .from("stories")
+          .upload(path, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from("stories")
+          .getPublicUrl(path);
+
+        imageUrl = data.publicUrl;
       }
 
-      const { data } = supabase.storage
-        .from("stories")
-        .getPublicUrl(path);
+      // ✅ INSERT CORRETO
+      const { error } = await supabase
+        .from("story_parts")
+        .insert({
+          story_id: storyId,
+          text: type === "text" ? text.trim() : null, // ✅ coluna correta
+          image_url: imageUrl,
+          part_order: Date.now(), // temporário
+        });
 
-      imageUrl = data.publicUrl;
-    }
+      if (error) throw error;
 
-    const { error } = await supabase.from("story_parts").insert({
-      story_id: storyId,
-      content: type === "text" ? text.trim() : null,
-      image_url: imageUrl,
-      part_order: Date.now(),
-    });
-
-    setSaving(false);
-
-    if (error) {
-      alert("Erro ao salvar parte");
-    } else {
       alert("Parte salva com sucesso ✅");
+      setText("");
+      setFile(null);
       onSaved();
+
+    } catch (err: any) {
+      console.error(err);
+      alert("Erro ao salvar parte:\n" + err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -84,7 +91,9 @@ export default function NewPartForm({
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(e) =>
+            setFile(e.target.files?.[0] || null)
+          }
         />
       )}
 
