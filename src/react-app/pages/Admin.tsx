@@ -22,34 +22,59 @@ export default function Admin() {
 
   // 🔎 Verifica sessão e role
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: sessionData } = await supabase.auth.getSession()
+  const checkSession = async () => {
+    const { data: sessionData } =
+      await supabase.auth.getSession()
 
-      if (!sessionData.session) {
-        setLoading(false)
-        return
-      }
+    if (!sessionData.session) {
+      setLoading(false)
+      return
+    }
 
-      const user = sessionData.session.user
+    const user = sessionData.session.user
 
-      const { data: profile } = await supabase
+    const { data: profile, error } =
+      await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single()
 
-      if (profile?.role === 'admin') {
-        setIsAuthenticated(true)
-      } else {
-        await supabase.auth.signOut()
-        alert('Acesso negado. Usuário não é admin.')
-      }
-
+    if (error) {
+      console.error(error)
+      await supabase.auth.signOut()
       setLoading(false)
+      return
     }
 
-    checkSession()
-  }, [])
+    if (profile?.role === 'admin') {
+      setIsAuthenticated(true)
+    } else {
+      await supabase.auth.signOut()
+      alert('Acesso negado. Usuário não é admin.')
+    }
+
+    setLoading(false)
+  }
+
+  checkSession()
+
+  // 👇 mantém sessão viva
+  const {
+    data: listener,
+  } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      if (!session) {
+        setIsAuthenticated(false)
+      }
+    }
+  )
+
+  return () => {
+    listener.subscription.unsubscribe()
+  }
+}, [])
+
 
   // 🔐 Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -67,7 +92,8 @@ export default function Admin() {
       return
     }
 
-    window.location.reload()
+    navigate('/admin')
+
   }
 
   const handleLogout = async () => {
