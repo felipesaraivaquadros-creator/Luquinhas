@@ -1,27 +1,34 @@
-import { MiddlewareHandler } from 'hono'
+import { createMiddleware } from 'hono/factory'
+import { getSupabaseClient } from '../lib/supabaseServer'
 
-type Env = {
-  SUPABASE_SERVICE_ROLE_KEY: string
-}
+export const authMiddleware = createMiddleware(async (c, next) => {
+  const authHeader = c.req.header('authorization')
 
-export const authMiddleware: MiddlewareHandler<{ Bindings: Env }> = async (
-  c,
-  next
-) => {
-  const auth = c.req.header('Authorization')
-
-  if (!auth) {
-    return c.json({ error: 'Authorization header ausente' }, 401)
+  if (!authHeader) {
+    return c.json({ error: 'Token ausente' }, 401)
   }
 
-  if (auth !== `Bearer ${c.env.SUPABASE_SERVICE_ROLE_KEY}`) {
-    return c.json({ error: 'Token inválido ou expirado' }, 401)
+  const token = authHeader.replace('Bearer ', '')
+
+  const supabase = getSupabaseClient(c.env)
+
+  const { data, error } = await supabase.auth.getUser(token)
+
+  if (error || !data.user) {
+    return c.json({ error: 'Token inválido' }, 401)
   }
 
-  // mock de usuário admin (backend only)
-  c.set('user', {
-    role: 'admin',
-  })
+  // busca role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .single()
 
+  if (profile?.role !== 'admin') {
+    return c.json({ error: 'Acesso negado' }, 403)
+  }
+
+  c.set('user', data.user)
   await next()
-}
+})

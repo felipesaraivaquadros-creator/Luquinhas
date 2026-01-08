@@ -22,69 +22,69 @@ export default function Admin() {
 
   // 🔎 Verifica sessão e role
   useEffect(() => {
-  const checkSession = async () => {
-    const { data: sessionData } =
-      await supabase.auth.getSession()
+    const checkSession = async () => {
+      const { data: sessionData } =
+        await supabase.auth.getSession()
 
-    if (!sessionData.session) {
-      setLoading(false)
-      return
-    }
-
-    const user = sessionData.session.user
-
-    const { data: profile, error } =
-      await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-    if (error) {
-      console.error(error)
-      await supabase.auth.signOut()
-      setLoading(false)
-      return
-    }
-
-    if (profile?.role === 'admin') {
-      setIsAuthenticated(true)
-    } else {
-      await supabase.auth.signOut()
-      alert('Acesso negado. Usuário não é admin.')
-    }
-
-    setLoading(false)
-  }
-
-  checkSession()
-
-  // 👇 mantém sessão viva
-  const {
-    data: listener,
-  } = supabase.auth.onAuthStateChange(
-    (_event, session) => {
-      if (!session) {
-        setIsAuthenticated(false)
+      if (!sessionData.session) {
+        setLoading(false)
+        return
       }
+
+      const user = sessionData.session.user
+
+      const { data: profile, error } =
+        await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+      if (error) {
+        console.error(error)
+        await supabase.auth.signOut()
+        setLoading(false)
+        return
+      }
+
+      if (profile?.role === 'admin') {
+        setIsAuthenticated(true)
+      } else {
+        await supabase.auth.signOut()
+        alert('Acesso negado. Usuário não é admin.')
+      }
+
+      setLoading(false)
     }
-  )
 
-  return () => {
-    listener.subscription.unsubscribe()
-  }
-}, [])
+    checkSession()
 
+    // 👇 mantém sessão viva
+    const {
+      data: listener,
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          setIsAuthenticated(false)
+        }
+      }
+    )
+
+    return () => {
+      listener.subscription.unsubscribe()
+    }
+  }, [])
 
   // 🔐 Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
     if (error) {
       alert('Credenciais inválidas')
@@ -92,8 +92,13 @@ export default function Admin() {
       return
     }
 
-    navigate('/admin')
+    // força persistência da sessão
+    await supabase.auth.setSession({
+      access_token: data.session!.access_token,
+      refresh_token: data.session!.refresh_token,
+    })
 
+    navigate('/admin')
   }
 
   const handleLogout = async () => {
@@ -119,15 +124,22 @@ export default function Admin() {
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
               Painel Administrativo
             </h1>
-            <p className="text-gray-600">Login de administrador</p>
+            <p className="text-gray-600">
+              Login de administrador
+            </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form
+            onSubmit={handleLogin}
+            className="space-y-6"
+          >
             <input
               type="email"
               placeholder="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
               className="w-full px-4 py-3 rounded-2xl border-2"
               required
             />
@@ -135,11 +147,16 @@ export default function Admin() {
               type="password"
               placeholder="Senha"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
               className="w-full px-4 py-3 rounded-2xl border-2"
               required
             />
-            <button type="submit" className="btn-primary w-full">
+            <button
+              type="submit"
+              className="btn-primary w-full"
+            >
               Entrar
             </button>
           </form>
@@ -181,21 +198,27 @@ export default function Admin() {
             icon={Book}
             title="Histórias"
             description="Gerencie histórias"
-            onClick={() => navigate('/admin/stories')}
+            onClick={() =>
+              navigate('/admin/stories')
+            }
           />
 
           <AdminCard
             icon={HelpCircle}
             title="Curiosidades"
             description="Gerencie curiosidades"
-            onClick={() => navigate('/admin/curiosities')}
+            onClick={() =>
+              navigate('/admin/curiosities')
+            }
           />
 
           <AdminCard
             icon={Award}
             title="Patrocinadores"
             description="Gerencie patrocinadores"
-            onClick={() => navigate('/admin/sponsors')}
+            onClick={() =>
+              navigate('/admin/sponsors')
+            }
           />
 
           <AdminCard
@@ -205,12 +228,13 @@ export default function Admin() {
           />
 
           <AdminCard
-          icon={Users}
-          title="Atividades"
-          description="Gerencie atividades"
-          onClick={() => navigate('/admin/activities')}
+            icon={Users}
+            title="Atividades"
+            description="Gerencie atividades"
+            onClick={() =>
+              navigate('/admin/activities')
+            }
           />
-
         </div>
       </div>
     </div>
@@ -240,7 +264,9 @@ function AdminCard({
       <h3 className="text-2xl font-bold text-gray-800 mb-2">
         {title}
       </h3>
-      <p className="text-gray-600">{description}</p>
+      <p className="text-gray-600">
+        {description}
+      </p>
       <div className="text-luquinhas-blue font-semibold mt-3">
         Clique para gerenciar
       </div>
